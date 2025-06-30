@@ -159,7 +159,7 @@ void read_modbus_address(void)
 
     // Combine the bits to form the 3-bit slave address
     SLAVE_ID = (addr_bit2 << 2) | (addr_bit1 << 1) | addr_bit0;
-    SLAVE_ID ++;
+    //SLAVE_ID ++;
 }
 
 uint64_t timeout = 500; // 500 milliseconds
