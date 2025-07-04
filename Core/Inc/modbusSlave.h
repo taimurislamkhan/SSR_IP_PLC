@@ -12,7 +12,7 @@ extern uint8_t SLAVE_ID;
 
 extern uint16_t Holding_Registers_Database[8];
 extern uint16_t Input_Registers_Database[4];
-extern uint8_t Coils_Database[1];
+extern uint8_t Coils_Database[2];
 extern const uint8_t Inputs_Database[1];
 
 uint8_t readHoldingRegs (void);

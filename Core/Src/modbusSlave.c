@@ -12,8 +12,8 @@ uint16_t Input_Registers_Database[4]={
 		0,  0,  0,  0    // 0-4   30001-30004
 };
 
-uint8_t Coils_Database[1]={
-		0b0    // 0    1-8
+uint8_t Coils_Database[2]={
+		0b0,0b0    // 0    1-8
 };
 
 const uint8_t Inputs_Database[1]={
@@ -153,7 +153,7 @@ uint8_t readCoils (void)
 	}
 
 	uint16_t endAddr = startAddr+numCoils-1;  // Last coils address
-	if (endAddr>8)  // end coil can not be more than 8 as we only have record of 8 (0-1) coils in total
+	if (endAddr>16)  // end coil can not be more than 8 as we only have record of 8 (0-1) coils in total
 	{
 		modbusException(ILLEGAL_DATA_ADDRESS);   // send an exception
 		return 0;
@@ -353,7 +353,7 @@ uint8_t writeSingleCoil (void)
 {
 	uint16_t startAddr = ((RxData[2]<<8)|RxData[3]);  // start Coil Address
 
-	if (startAddr>8)  // The Coil Address can not be more than 199 as we only have record of 200 Coils in total
+	if (startAddr>16)  // The Coil Address can not be more than 199 as we only have record of 200 Coils in total
 	{
 		modbusException(ILLEGAL_DATA_ADDRESS);   // send an exception
 		return 0;
@@ -408,7 +408,7 @@ uint8_t writeMultiCoils (void)
 	}
 
 	uint16_t endAddr = startAddr+numCoils-1;  // Last coils address
-	if (endAddr>8)  // end coil can not be more than 199 as we only have record of 200 (0-199) coils in total
+	if (endAddr>16)  // end coil can not be more than 199 as we only have record of 200 (0-199) coils in total
 	{
 		modbusException(ILLEGAL_DATA_ADDRESS);   // send an exception
 		return 0;
