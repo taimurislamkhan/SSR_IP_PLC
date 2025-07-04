@@ -643,8 +643,30 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+// Function to check and reset energy values based on coils 9-12 (bits 0-3 of Coils_Database[1])
+void check_energy_reset_coils(void)
+{
+	// Check if we have any reset coils activated (coils 9-12 would be bits 0-3 of Coils_Database[1])
+	for (int i = 0; i < 4; i++)
+	{
+		// Check if the corresponding bit is set (coils 9, 10, 11, 12)
+		if (Coils_Database[1] & (1 << i))
+		{
+			// Reset the energy value for this channel
+			energy_joules[i] = 0.0f;
+			// Update the holding register immediately
+			Holding_Registers_Database[4 + i] = 0;
+			// Clear the coil bit (so it works as a trigger)
+			Coils_Database[1] &= ~(1 << i);
+		}
+	}
+}
+
 void get_energy_values(float* current_mA, uint8_t ssr_states[])
 {
+	// First check if any energy reset coils are active
+	check_energy_reset_coils();
+	
 	// Calculate time delta since last call
 	uint32_t current_tick = HAL_GetTick();
 	// Initialize last_energy_tick on the first run
