@@ -40,7 +40,7 @@ void sendData (uint8_t *data, int size)
 	/* Small delay to ensure DE pin is fully set */
 	for(volatile uint16_t i = 0; i < 150; i++);
 	
-	HAL_UART_Transmit(&huart1, TxData, size+4, 1000);
+	HAL_UART_Transmit(&huart1, TxData, size+2, 1000);
 
 	/* Wait until the transmission is complete before resetting DE pin */
 	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC) == RESET) {}
