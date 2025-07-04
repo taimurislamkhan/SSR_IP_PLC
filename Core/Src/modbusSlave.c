@@ -13,7 +13,7 @@ uint16_t Input_Registers_Database[4]={
 };
 
 uint8_t Coils_Database[1]={
-		0b10101010    // 0    1-8
+		0b0    // 0    1-8
 };
 
 const uint8_t Inputs_Database[1]={
@@ -36,10 +36,19 @@ void sendData (uint8_t *data, int size)
 	data[size+1] = (crc>>8)&0xFF;  // CRC HIGH
 
 	HAL_GPIO_WritePin(DE_GPIO_Port, DE_Pin, GPIO_PIN_SET);  // Pull DE high to enable TX operation
-	HAL_UART_Transmit(&huart1, data, size+2, 1000);
+	
+	/* Small delay to ensure DE pin is fully set */
+	for(volatile uint16_t i = 0; i < 150; i++);
+	
+	HAL_UART_Transmit(&huart1, TxData, size+4, 1000);
+
+	/* Wait until the transmission is complete before resetting DE pin */
+	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC) == RESET) {}
+
 	HAL_GPIO_WritePin(DE_GPIO_Port, DE_Pin, GPIO_PIN_RESET);  // Pull RE Low to enable RX operation
-
-
+	
+	/* Small delay to ensure DE pin is fully reset */
+	for(volatile uint16_t i = 0; i < 150; i++);
 }
 
 void modbusException (uint8_t exceptioncode)

@@ -56,7 +56,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-#define LINE_VOLTAGE 220.0f // Assuming 220V AC line voltage. Please change if different.
+#define LINE_VOLTAGE 110.0f // Assuming 220V AC line voltage. Please change if different.
 static float energy_joules[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 static uint32_t last_energy_tick = 0;
 
@@ -169,83 +169,6 @@ uint64_t previous_time=0;
 uint8_t received_data[13]={0,0,0,0,0,0,0};
 uint8_t sent_data[13];
 
-
-//void I2C_Error_Handler(I2C_HandleTypeDef *hi2c) {
-//    // Check for errors and clear flags
-//    if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_AF)) {
-//        // Clear the Acknowledge Failure Flag
-//        __HAL_I2C_CLEAR_FLAG(hi2c, I2C_FLAG_AF);
-//    }
-//
-//    if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_ARLO)) {
-//        // Clear the Arbitration Lost Flag
-//        __HAL_I2C_CLEAR_FLAG(hi2c, I2C_FLAG_ARLO);
-//    }
-//
-//    if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_BERR)) {
-//        // Clear the Bus Error Flag
-//        __HAL_I2C_CLEAR_FLAG(hi2c, I2C_FLAG_BERR);
-//    }
-//
-//    if (__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_OVR)) {
-//        // Clear the Overrun/Underrun Flag
-//        __HAL_I2C_CLEAR_FLAG(hi2c, I2C_FLAG_OVR);
-//    }
-//
-//    // Reset the I2C peripheral
-//    HAL_I2C_DeInit(hi2c);
-//    HAL_I2C_Init(hi2c);
-//
-//    // Re-enable I2C listening after resetting the peripheral
-//    HAL_I2C_EnableListen_IT(hi2c);
-//
-//    // Wait for the bus to become free
-//    while (HAL_I2C_GetState(hi2c) != HAL_I2C_STATE_READY) {
-//        HAL_Delay(1);
-//    }
-//}
-//
-//#define MAX_CONSECUTIVE_ERRORS 5
-//uint8_t consecutive_errors = 0;
-//
-//
-//void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode)
-//{
-//	HAL_StatusTypeDef status;
-//
-////     Refresh IWDG counter to prevent reset
-//        if (HAL_IWDG_Refresh(&hiwdg) != HAL_OK)
-//        {
-//            Error_Handler(); // Implement your error handler
-//        }
-//	if (TransferDirection == I2C_DIRECTION_TRANSMIT)
-//	{
-//		do {
-//			status = HAL_I2C_Slave_Sequential_Receive_IT(hi2c, received_data, 13, I2C_LAST_FRAME);
-//			if (status != HAL_OK) {
-//				// Receive error
-//				I2C_Error_Handler(&hi2c1);
-//			} else {
-//				// Update the states and timers after receiving new data
-//				previous_time = HAL_GetTick();
-//				consecutive_errors = 0;
-//			}
-//		} while (status != HAL_OK && consecutive_errors < MAX_CONSECUTIVE_ERRORS);
-//	}
-//	else
-//	{
-//		do {
-//			status = HAL_I2C_Slave_Sequential_Transmit_IT(hi2c, sent_data, 13, I2C_LAST_FRAME);
-//			if (status != HAL_OK) {
-//				// Transmission error
-//				I2C_Error_Handler(&hi2c1);
-//			} else {
-//				consecutive_errors = 0;
-//			}
-//		} while (status != HAL_OK && consecutive_errors < MAX_CONSECUTIVE_ERRORS);
-//	}
-//}
-
 void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c)
 {
 	// Re-enable I2C listening after a complete transaction
@@ -313,93 +236,6 @@ void CalibrateZeroCurrent(void)
     zeroCurrentCal[channel] = (uint16_t)(sampleSums[channel] / numSamples);
   }
 }
-
-
-//// Process the received string and convert it to a dimmer value (0-100%)
-//void ProcessReceivedValue(void)
-//{
-//  // Null-terminate the string
-//  rxBuffer[rxIndex] = '\0';
-//
-//  // Convert string to integer
-//  uint32_t tempValue = atoi(rxBuffer);
-//
-//  // Limit to range (0-100)
-//  if (tempValue > 100) {
-//    tempValue = 100;
-//  }
-//
-//  // Update dimmer value for all SSRs (for now, we'll set all to the same value)
-//  for (uint8_t i = 0; i < 4; i++) {
-//    dimmerValues[i] = (uint16_t)tempValue;
-//
-//    // Convert value 1 to 2 for more stable operation
-//    if (dimmerValues[i] == 1) {
-//      dimmerValues[i] = 2;
-//    }
-//
-//    // Calculate dimming delay in microseconds
-//    // Map dimmer value 0-100 to delay HALF_CYCLE_PERIOD_US-0 (inverted, 0% = full off, 100% = full on)
-//    if (dimmerValues[i] == 0) {
-//      // If dimmer is 0%, keep SSR off
-//      dimmerDelaysUs[i] = HALF_CYCLE_PERIOD_US; // Set to max delay (never trigger)
-//    } else if (dimmerValues[i] == 100) {
-//      // If dimmer is 100%, keep SSR fully on
-//      dimmerDelaysUs[i] = 0;     // No delay (trigger immediately)
-//    } else {
-//      // Calculate delay (0% = HALF_CYCLE_PERIOD_US delay, 100% = 0us delay)
-//      // Ensure the delay is within valid range for the timer
-//      dimmerDelaysUs[i] = HALF_CYCLE_PERIOD_US - ((dimmerValues[i] * HALF_CYCLE_PERIOD_US) / 100);
-//
-//      // Make sure we have a valid delay value (not 0 or too large)
-//      if (dimmerDelaysUs[i] >= HALF_CYCLE_PERIOD_US) {
-//        dimmerDelaysUs[i] = HALF_CYCLE_PERIOD_US - 100; // Leave a small margin
-//      } else if (dimmerDelaysUs[i] == 0) {
-//        dimmerDelaysUs[i] = 1;
-//      }
-//    }
-//  }
-//
-//  // Send confirmation back to user
-//  char txBuffer[100];
-//  sprintf(txBuffer, "Dimmer values set to: SSR1=%u%%, SSR2=%u%%, SSR3=%u%%, SSR4=%u%%\r\n",
-//          dimmerValues[0], dimmerValues[1], dimmerValues[2], dimmerValues[3]);
-//  HAL_UART_Transmit(&huart1, (uint8_t*)txBuffer, strlen(txBuffer), 100);
-//
-//  // Reset reception variables
-//  rxIndex = 0;
-//  rxComplete = 0;
-//  memset(rxBuffer, 0, sizeof(rxBuffer));
-//}
-//
-//// UART Reception Complete Callback
-//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-//{
-//  if (huart->Instance == USART1) {
-//    // Check for Enter key (CR or LF)
-//    if (rxData == '\r' || rxData == '\n') {
-//      if (rxIndex > 0) {
-//        rxComplete = 1;
-//      }
-//    }
-//    // Check for backspace
-//    else if (rxData == 127 || rxData == 8) {
-//      if (rxIndex > 0) {
-//        rxIndex--;
-//      }
-//    }
-//    // Check if the character is a digit and buffer isn't full
-//    else if (rxData >= '0' && rxData <= '9' && rxIndex < sizeof(rxBuffer) - 1) {
-//      rxBuffer[rxIndex++] = rxData;
-//
-//      // Echo the character back to the terminal
-//      HAL_UART_Transmit(&huart1, &rxData, 1, 10);
-//    }
-//
-//    // Start receiving next character
-//    HAL_UART_Receive_IT(&huart1, &rxData, 1);
-//  }
-//}
 
 // Timer Update Interrupt Callback
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
@@ -633,7 +469,7 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM5_Init();
   MX_I2C1_Init();
-    /* USER CODE BEGIN 2 */
+  /* USER CODE BEGIN 2 */
 
   read_modbus_address(); // Read slave ID from GPIO pins
 
@@ -692,14 +528,13 @@ int main(void)
   HAL_NVIC_SetPriority(TIM5_IRQn, 6, 0);
   HAL_NVIC_EnableIRQ(TIM5_IRQn);
 
-//  // Start UART reception in interrupt mode
-//  HAL_UART_Receive_IT(&huart1, &rxData, 1);
+  // Start UART reception in interrupt mode
+  HAL_UART_Receive_IT(&huart1, &rxData, 1);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  //uint32_t lastPrintTime = 0;
 
   while (1)
   {
@@ -707,55 +542,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  // Inputs Reading
-//		uint8_t left_switch = HAL_GPIO_ReadPin(INPUT4_GPIO_Port, INPUT4_Pin);
-//		uint8_t right_switch = HAL_GPIO_ReadPin(INPUT3_GPIO_Port, INPUT3_Pin);
-//		uint8_t home_switch = HAL_GPIO_ReadPin(INPUT2_GPIO_Port, INPUT2_Pin);
-
-	    GetCurrentReadings();
-//		uint16_t pressure_sensor_val = (uint16_t)ADC_VAL[4];
-//
-//		uint16_t adcVal1 = (uint16_t)current_mA[0];
-//		uint16_t adcVal2 = (uint16_t)current_mA[1];
-//		uint16_t adcVal3 = (uint16_t)current_mA[2];
-//		uint16_t adcVal4 = (uint16_t)current_mA[3];
-
-//		sent_data[0] = right_switch;
-//		sent_data[1] = left_switch;
-//		sent_data[2] = home_switch;
-//
-//		// Store current1 values
-//		sent_data[3] = (uint8_t)(adcVal1 >> 8);
-//		sent_data[4] = (uint8_t)(adcVal1 & 0xFF);
-//
-//		// Store current2 values
-//		sent_data[5] = (uint8_t)(adcVal2 >> 8);
-//		sent_data[6] = (uint8_t)(adcVal2 & 0xFF);
-//
-//		// Store current3 values
-//		sent_data[7] = (uint8_t)(adcVal3 >> 8);
-//		sent_data[8] = (uint8_t)(adcVal3 & 0xFF);
-//
-//		// Store current4 values
-//		sent_data[9] = (uint8_t)(adcVal4 >> 8);
-//		sent_data[10] = (uint8_t)(adcVal4 & 0xFF);
-//
-//		// Pressure Sensor values
-//		sent_data[11] = (uint8_t)(pressure_sensor_val >> 8);
-//		sent_data[12] = (uint8_t)(pressure_sensor_val & 0xFF);
-
-
-//	  uint8_t _ssr1_state = received_data [0];
-//	  uint8_t _ssr2_state = received_data [1];
-//	  uint8_t _ssr3_state = received_data [2];
-//	  uint8_t _ssr4_state = received_data [3];
-//	  uint8_t _cooling_valve = received_data [4];
-//	  uint8_t _led_color = received_data[8];
-//	  uint8_t _ssr1_dimmer = received_data[9];
-//	  uint8_t _ssr2_dimmer = received_data[10];
-//	  uint8_t _ssr3_dimmer = received_data[11];
-//	  uint8_t _ssr4_dimmer = received_data[12];
-
+	  GetCurrentReadings();
 
 	  uint8_t _ssr1_dimmer = Holding_Registers_Database[0]; //40001
 	  uint8_t _ssr2_dimmer = Holding_Registers_Database[1]; //40002
@@ -767,10 +554,10 @@ int main(void)
 	  uint8_t _ssr3_state = Coils_Database [0] & 0x4; //	3
 	  uint8_t _ssr4_state = Coils_Database [0] & 0x8; //	4
 
-	  encoders[0].Reset = Coils_Database [0] & 0x10;  //	5
-	  encoders[0].Reset = Coils_Database [0] & 0x20;  //	6
-	  encoders[0].Reset = Coils_Database [0] & 0x40;  //	7
-	  encoders[0].Reset = Coils_Database [0] & 0x80;  //	8
+	  encoders[0].Reset = (Coils_Database[0] & 0x10) ? 1 : 0;  // 5
+	  encoders[1].Reset = (Coils_Database[0] & 0x20) ? 1 : 0;  // 6
+	  encoders[2].Reset = (Coils_Database[0] & 0x40) ? 1 : 0;  // 7
+	  encoders[3].Reset = (Coils_Database[0] & 0x80) ? 1 : 0;  // 8
 
 	  uint8_t ssr_states[] = {_ssr1_state, _ssr2_state, _ssr3_state, _ssr4_state};
 	  float current_mA_float[4];
@@ -779,10 +566,7 @@ int main(void)
 	  }
 	  get_energy_values(current_mA_float, ssr_states);
 
-//	  uint8_t _cooling_valve = received_data [4];
-//	  uint8_t _led_color = received_data[8];
 
-    
 	  SetSSRDimmerValue(1,_ssr1_dimmer);
 	  SetSSRDimmerValue(2,_ssr2_dimmer);
 	  SetSSRDimmerValue(3,_ssr3_dimmer);
@@ -794,16 +578,12 @@ int main(void)
 
 	  encoder_sync(encoders,TOTAL_ENCODERS);
 
-	  Input_Registers_Database[0] = (uint16_t)encoders[0].Distance*100;
-	  Input_Registers_Database[1] = (uint16_t)encoders[1].Distance*100;
-	  Input_Registers_Database[2] = (uint16_t)encoders[2].Distance*100;
-	  Input_Registers_Database[3] = (uint16_t)encoders[3].Distance*100;
+	  Input_Registers_Database[0] = (uint16_t)(encoders[0].Distance*100);
+	  Input_Registers_Database[1] = (uint16_t)(encoders[1].Distance*100);
+	  Input_Registers_Database[2] = (uint16_t)(encoders[2].Distance*100);
+	  Input_Registers_Database[3] = (uint16_t)(encoders[3].Distance*100);
 
-	  read_modbus_address(); // Read slave ID from GPIO pins
-
-//	  set_led_color(_led_color);
-//	  HAL_GPIO_WritePin(OUTPUT1_GPIO_Port, OUTPUT1_Pin, _cooling_valve);
-	  HAL_Delay(20);
+	  HAL_Delay(50);
   }
   /* USER CODE END 3 */
 }

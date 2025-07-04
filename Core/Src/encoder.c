@@ -189,7 +189,7 @@ void encoder_receive(ENCODER* encoders, size_t count)
             if (_status != HAL_OK )
             {
             	encoders[i].Fail=1;
-            	encoders[i].Distance=0;
+            	//encoders[i].Distance=0;
             }
             else
             {
