@@ -46,6 +46,33 @@
 
 // Calculate half-cycle period in microseconds based on frequency
 #define HALF_CYCLE_PERIOD_US (1000000 / (AC_LINE_FREQUENCY * 2))
+
+// Register address definitions (Modbus addresses - 40001 = index 0)
+#define REG_LIN_ENC1_POS       0   // 40001
+#define REG_LIN_ENC2_POS       1   // 40002
+#define REG_LIN_ENC3_POS       2   // 40003
+#define REG_LIN_ENC4_POS       3   // 40004
+#define REG_ENERGY_SSR1        4   // 40005
+#define REG_ENERGY_SSR2        5   // 40006
+#define REG_ENERGY_SSR3        6   // 40007
+#define REG_ENERGY_SSR4        7   // 40008
+
+#define REG_SSR1_CTRL          100 // 40101
+#define REG_SSR2_CTRL          101 // 40102
+#define REG_SSR3_CTRL          102 // 40103
+#define REG_SSR4_CTRL          103 // 40104
+#define REG_RESET_ENC1         104 // 40105
+#define REG_RESET_ENC2         105 // 40106
+#define REG_RESET_ENC3         106 // 40107
+#define REG_RESET_ENC4         107 // 40108
+#define REG_RESET_ENERGY1      108 // 40109
+#define REG_RESET_ENERGY2      109 // 40110
+#define REG_RESET_ENERGY3      110 // 40111
+#define REG_RESET_ENERGY4      111 // 40112
+#define REG_TIP_ENERGY_PCT1    112 // 40113
+#define REG_TIP_ENERGY_PCT2    113 // 40114
+#define REG_TIP_ENERGY_PCT3    114 // 40115
+#define REG_TIP_ENERGY_PCT4    115 // 40116
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -544,20 +571,20 @@ int main(void)
 
 	  GetCurrentReadings();
 
-	  uint8_t _ssr1_dimmer = Holding_Registers_Database[0]; //40001
-	  uint8_t _ssr2_dimmer = Holding_Registers_Database[1]; //40002
-	  uint8_t _ssr3_dimmer = Holding_Registers_Database[2]; //40003
-	  uint8_t _ssr4_dimmer = Holding_Registers_Database[3]; //40004
+	  uint8_t _ssr1_dimmer = Holding_Registers_Database[REG_TIP_ENERGY_PCT1];
+	  uint8_t _ssr2_dimmer = Holding_Registers_Database[REG_TIP_ENERGY_PCT2];
+	  uint8_t _ssr3_dimmer = Holding_Registers_Database[REG_TIP_ENERGY_PCT3];
+	  uint8_t _ssr4_dimmer = Holding_Registers_Database[REG_TIP_ENERGY_PCT4];
 
-	  uint8_t _ssr1_state = Coils_Database [0] & 0x1; // 	1
-	  uint8_t _ssr2_state = Coils_Database [0] & 0x2; //	2
-	  uint8_t _ssr3_state = Coils_Database [0] & 0x4; //	3
-	  uint8_t _ssr4_state = Coils_Database [0] & 0x8; //	4
+	  uint8_t _ssr1_state = (Holding_Registers_Database[REG_SSR1_CTRL] & 0x1) ? 1 : 0;
+	  uint8_t _ssr2_state = (Holding_Registers_Database[REG_SSR2_CTRL] & 0x1) ? 1 : 0;
+	  uint8_t _ssr3_state = (Holding_Registers_Database[REG_SSR3_CTRL] & 0x1) ? 1 : 0;
+	  uint8_t _ssr4_state = (Holding_Registers_Database[REG_SSR4_CTRL] & 0x1) ? 1 : 0;
 
-	  encoders[0].Reset = (Coils_Database[0] & 0x10) ? 1 : 0;  // 5
-	  encoders[1].Reset = (Coils_Database[0] & 0x20) ? 1 : 0;  // 6
-	  encoders[2].Reset = (Coils_Database[0] & 0x40) ? 1 : 0;  // 7
-	  encoders[3].Reset = (Coils_Database[0] & 0x80) ? 1 : 0;  // 8
+	  encoders[0].Reset = (Holding_Registers_Database[REG_RESET_ENC1] & 0x1) ? 1 : 0;
+	  encoders[1].Reset = (Holding_Registers_Database[REG_RESET_ENC2] & 0x1) ? 1 : 0;
+	  encoders[2].Reset = (Holding_Registers_Database[REG_RESET_ENC3] & 0x1) ? 1 : 0;
+	  encoders[3].Reset = (Holding_Registers_Database[REG_RESET_ENC4] & 0x1) ? 1 : 0;
 
 	  uint8_t ssr_states[] = {_ssr1_state, _ssr2_state, _ssr3_state, _ssr4_state};
 	  float current_mA_float[4];
@@ -578,10 +605,10 @@ int main(void)
 
 	  encoder_sync(encoders,TOTAL_ENCODERS);
 
-	  Input_Registers_Database[0] = (uint16_t)(encoders[0].Distance*100);
-	  Input_Registers_Database[1] = (uint16_t)(encoders[1].Distance*100);
-	  Input_Registers_Database[2] = (uint16_t)(encoders[2].Distance*100);
-	  Input_Registers_Database[3] = (uint16_t)(encoders[3].Distance*100);
+	  Holding_Registers_Database[REG_LIN_ENC1_POS] = (uint16_t)(encoders[0].Distance*100);
+	  Holding_Registers_Database[REG_LIN_ENC2_POS] = (uint16_t)(encoders[1].Distance*100);
+	  Holding_Registers_Database[REG_LIN_ENC3_POS] = (uint16_t)(encoders[2].Distance*100);
+	  Holding_Registers_Database[REG_LIN_ENC4_POS] = (uint16_t)(encoders[3].Distance*100);
 
 	  HAL_Delay(50);
   }
@@ -643,29 +670,29 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-// Function to check and reset energy values based on coils 9-12 (bits 0-3 of Coils_Database[1])
-void check_energy_reset_coils(void)
+// Function to check and reset energy values based on holding registers 20-23
+void check_energy_reset_holding_registers(void)
 {
-	// Check if we have any reset coils activated (coils 9-12 would be bits 0-3 of Coils_Database[1])
-	for (int i = 0; i < 4; i++)
-	{
-		// Check if the corresponding bit is set (coils 9, 10, 11, 12)
-		if (Coils_Database[1] & (1 << i))
-		{
-			// Reset the energy value for this channel
-			energy_joules[i] = 0.0f;
-			// Update the holding register immediately
-			Holding_Registers_Database[4 + i] = 0;
-			// Clear the coil bit (so it works as a trigger)
-			Coils_Database[1] &= ~(1 << i);
-		}
-	}
+    // Check each of the holding registers (20-23)
+    for (int i = 0; i < 4; i++)
+    {
+        // Check if the register has a non-zero value (trigger condition)
+        if (Holding_Registers_Database[REG_RESET_ENERGY1 + i] != 0)
+        {
+            // Reset the energy value for this channel
+            energy_joules[i] = 0.0f;
+            // Update the energy display register immediately
+            Holding_Registers_Database[REG_ENERGY_SSR1 + i] = 0;
+            // Clear the trigger register
+            Holding_Registers_Database[REG_RESET_ENERGY1 + i] = 0;
+        }
+    }
 }
 
 void get_energy_values(float* current_mA, uint8_t ssr_states[])
 {
 	// First check if any energy reset coils are active
-	check_energy_reset_coils();
+	check_energy_reset_holding_registers();
 	
 	// Calculate time delta since last call
 	uint32_t current_tick = HAL_GetTick();
@@ -696,7 +723,7 @@ void get_energy_values(float* current_mA, uint8_t ssr_states[])
 		// Store the integer part of the cumulative energy in the holding register.
 		// Note: This will overflow if energy exceeds 65535 Joules.
 		// A 32-bit value using two registers would be better for long-term accumulation.
-		Holding_Registers_Database[4 + i] = (uint16_t)energy_joules[i];
+		Holding_Registers_Database[REG_ENERGY_SSR1 + i] = (uint16_t)energy_joules[i];
 	}
 }
 /* USER CODE END 4 */

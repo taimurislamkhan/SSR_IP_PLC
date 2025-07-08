@@ -4,8 +4,28 @@
 // Global variable for Modbus Slave ID, determined at runtime from GPIO pins.
 uint8_t SLAVE_ID = 0;
 
-uint16_t Holding_Registers_Database[8]={
-		0,  0,  0,  0,  0,  0,  0,  0   // 0-8   40001-40008
+uint16_t Holding_Registers_Database[116] = {
+    // 40001-40008: Linear Encoders and Energy (0-7)
+    0, 0, 0, 0,    // 40001-40004: Linear Encoder 1-4 Position (1/100mm)
+    0, 0, 0, 0,    // 40005-40008: Energy Used by SSR 1-4 (J)
+
+    // 40009-40100: Unused registers (8-99) - 92 registers
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 8-17
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 18-27
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 28-37
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 38-47
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 48-57
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 58-67
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 68-77
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 78-87
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 88-97
+    0, 0,                         // 98-99
+
+    // 40101-40116: Control and Configuration (100-115) - 16 registers
+    0, 0, 0, 0,    // 40101-40104: SSR 1-4 Control (0=OFF, 1=ON)
+    0, 0, 0, 0,    // 40105-40108: Reset Linear Encoders 1-4 (1=Reset)
+    0, 0, 0, 0,    // 40109-40112: Reset Energy Joules 1-4 (1=Reset)
+    0, 0, 0, 0     // 40113-40116: TIP Energy Percentage 1-4 (0-100%)
 };
 
 uint16_t Input_Registers_Database[4]={
@@ -40,7 +60,7 @@ void sendData (uint8_t *data, int size)
 	/* Small delay to ensure DE pin is fully set */
 	for(volatile uint16_t i = 0; i < 150; i++);
 	
-	HAL_UART_Transmit(&huart1, TxData, size+4, 1000);
+	HAL_UART_Transmit(&huart1, TxData, size+2, 1000);
 
 	/* Wait until the transmission is complete before resetting DE pin */
 	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TC) == RESET) {}
@@ -75,7 +95,7 @@ uint8_t readHoldingRegs (void)
 	}
 
 	uint16_t endAddr = startAddr+numRegs-1;  // end Register
-	if (endAddr>8)  // end Register can not be more than 8 as we only have record of 50 Registers in total
+	if (endAddr>116)  // end Register can not be more than 8 as we only have record of 50 Registers in total
 	{
 		modbusException(ILLEGAL_DATA_ADDRESS);   // send an exception
 		return 0;
@@ -285,7 +305,7 @@ uint8_t writeHoldingRegs (void)
 	}
 
 	uint16_t endAddr = startAddr+numRegs-1;  // end Register
-	if (endAddr>8)  // end Register can not be more than 49 as we only have record of 50 Registers in total
+	if (endAddr>116)  // end Register can not be more than 49 as we only have record of 50 Registers in total
 	{
 		modbusException(ILLEGAL_DATA_ADDRESS);   // send an exception
 		return 0;
@@ -321,7 +341,7 @@ uint8_t writeSingleReg (void)
 {
 	uint16_t startAddr = ((RxData[2]<<8)|RxData[3]);  // start Register Address
 
-	if (startAddr>8)  // The Register Address can not be more than 49 as we only have record of 50 Registers in total
+	if (startAddr>116)  // The Register Address can not be more than 49 as we only have record of 50 Registers in total
 	{
 		modbusException(ILLEGAL_DATA_ADDRESS);   // send an exception
 		return 0;
