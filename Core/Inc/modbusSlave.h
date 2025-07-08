@@ -10,7 +10,7 @@ extern uint8_t SLAVE_ID;
 #define ILLEGAL_DATA_ADDRESS   0x02
 #define ILLEGAL_DATA_VALUE     0x03
 
-extern uint16_t Holding_Registers_Database[116];
+extern uint16_t Holding_Registers_Database[125];
 extern uint16_t Input_Registers_Database[4];
 extern uint8_t Coils_Database[2];
 extern const uint8_t Inputs_Database[1];

@@ -4,7 +4,7 @@
 // Global variable for Modbus Slave ID, determined at runtime from GPIO pins.
 uint8_t SLAVE_ID = 0;
 
-uint16_t Holding_Registers_Database[116] = {
+uint16_t Holding_Registers_Database[125] = {
     // 40001-40008: Linear Encoders and Energy (0-7)
     0, 0, 0, 0,    // 40001-40004: Linear Encoder 1-4 Position (1/100mm)
     0, 0, 0, 0,    // 40005-40008: Energy Used by SSR 1-4 (J)
@@ -95,7 +95,7 @@ uint8_t readHoldingRegs (void)
 	}
 
 	uint16_t endAddr = startAddr+numRegs-1;  // end Register
-	if (endAddr>116)  // end Register can not be more than 8 as we only have record of 50 Registers in total
+	if (endAddr>125)  // end Register can not be more than 8 as we only have record of 50 Registers in total
 	{
 		modbusException(ILLEGAL_DATA_ADDRESS);   // send an exception
 		return 0;
@@ -305,7 +305,7 @@ uint8_t writeHoldingRegs (void)
 	}
 
 	uint16_t endAddr = startAddr+numRegs-1;  // end Register
-	if (endAddr>116)  // end Register can not be more than 49 as we only have record of 50 Registers in total
+	if (endAddr>125)  // end Register can not be more than 49 as we only have record of 50 Registers in total
 	{
 		modbusException(ILLEGAL_DATA_ADDRESS);   // send an exception
 		return 0;
@@ -341,7 +341,7 @@ uint8_t writeSingleReg (void)
 {
 	uint16_t startAddr = ((RxData[2]<<8)|RxData[3]);  // start Register Address
 
-	if (startAddr>116)  // The Register Address can not be more than 49 as we only have record of 50 Registers in total
+	if (startAddr>125)  // The Register Address can not be more than 49 as we only have record of 50 Registers in total
 	{
 		modbusException(ILLEGAL_DATA_ADDRESS);   // send an exception
 		return 0;
